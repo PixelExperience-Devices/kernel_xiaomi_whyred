@@ -1245,10 +1245,27 @@ void set_cpus_allowed_common(struct task_struct *p, const struct cpumask *new_ma
 	p->nr_cpus_allowed = cpumask_weight(new_mask);
 }
 
+static const struct cpumask *get_adjusted_cpumask(const struct task_struct *p,
+	const struct cpumask *req_mask)
+{
+	/* Force all performance-critical kthreads onto the big cluster */
+	if (p->flags & PF_PERF_CRITICAL)
+		return cpu_perf_mask;
+
+	/* Force all trivial, unbound kthreads onto the little cluster */
+	if (p->flags & PF_KTHREAD && p->pid != 1 &&
+		cpumask_equal(req_mask, cpu_all_mask))
+		return cpu_lp_mask;
+
+	return req_mask;
+}
+
 void do_set_cpus_allowed(struct task_struct *p, const struct cpumask *new_mask)
 {
 	struct rq *rq = task_rq(p);
 	bool queued, running;
+
+	new_mask = get_adjusted_cpumask(p, new_mask);
 
 	lockdep_assert_held(&p->pi_lock);
 
@@ -1291,6 +1308,8 @@ static int __set_cpus_allowed_ptr(struct task_struct *p,
 	unsigned int dest_cpu;
 	int ret = 0;
 	cpumask_t allowed_mask;
+
+	new_mask = get_adjusted_cpumask(p, new_mask);
 
 	rq = task_rq_lock(p, &flags);
 
@@ -2164,6 +2183,7 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags,
 	wallclock = sched_ktime_clock();
 	update_task_ravg(rq->curr, rq, TASK_UPDATE, wallclock, 0);
 	update_task_ravg(p, rq, TASK_WAKE, wallclock, 0);
+	cpufreq_update_util(rq, 0);
 	raw_spin_unlock(&rq->lock);
 
 	rcu_read_lock();
@@ -2257,6 +2277,7 @@ static void try_to_wake_up_local(struct task_struct *p)
 
 		update_task_ravg(rq->curr, rq, TASK_UPDATE, wallclock, 0);
 		update_task_ravg(p, rq, TASK_WAKE, wallclock, 0);
+		cpufreq_update_util(rq, 0);
 		ttwu_activate(rq, p, ENQUEUE_WAKEUP);
 		note_task_waking(p, wallclock);
 	}
@@ -3228,6 +3249,8 @@ void scheduler_tick(void)
 	calc_global_load_tick(rq);
 	wallclock = sched_ktime_clock();
 	update_task_ravg(rq->curr, rq, TASK_UPDATE, wallclock, 0);
+
+	cpufreq_update_util(rq, 0);
 	early_notif = early_detection_notify(rq, wallclock);
 	raw_spin_unlock(&rq->lock);
 
@@ -3596,6 +3619,7 @@ static void __sched notrace __schedule(bool preempt)
 	if (likely(prev != next)) {
 		update_task_ravg(prev, rq, PUT_PREV_TASK, wallclock, 0);
 		update_task_ravg(next, rq, PICK_NEXT_TASK, wallclock, 0);
+		cpufreq_update_util(rq, 0);
 		if (!is_idle_task(prev) && !prev->on_rq)
 			update_avg_burst(prev);
 
@@ -3614,6 +3638,7 @@ static void __sched notrace __schedule(bool preempt)
 		cpu = cpu_of(rq);
 	} else {
 		update_task_ravg(prev, rq, TASK_UPDATE, wallclock, 0);
+		cpufreq_update_util(rq, 0);
 		lockdep_unpin_lock(&rq->lock);
 		raw_spin_unlock_irq(&rq->lock);
 	}
