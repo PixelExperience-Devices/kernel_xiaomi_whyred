@@ -163,30 +163,12 @@ EXPORT_SYMBOL(sg_init_one);
  */
 static struct scatterlist *sg_kmalloc(unsigned int nents, gfp_t gfp_mask)
 {
-	if (nents == SG_MAX_SINGLE_ALLOC) {
-		/*
-		 * Kmemleak doesn't track page allocations as they are not
-		 * commonly used (in a raw form) for kernel data structures.
-		 * As we chain together a list of pages and then a normal
-		 * kmalloc (tracked by kmemleak), in order to for that last
-		 * allocation not to become decoupled (and thus a
-		 * false-positive) we need to inform kmemleak of all the
-		 * intermediate allocations.
-		 */
-		void *ptr = (void *) __get_free_page(gfp_mask);
-		kmemleak_alloc(ptr, PAGE_SIZE, 1, gfp_mask);
-		return ptr;
-	} else
-		return kmalloc(nents * sizeof(struct scatterlist), gfp_mask);
+	return kmalloc(nents * sizeof(struct scatterlist), gfp_mask);
 }
 
 static void sg_kfree(struct scatterlist *sg, unsigned int nents)
 {
-	if (nents == SG_MAX_SINGLE_ALLOC) {
-		kmemleak_free(sg);
-		free_page((unsigned long) sg);
-	} else
-		kfree(sg);
+	kfree(sg);
 }
 
 /**
@@ -496,17 +478,18 @@ static bool sg_miter_get_next_page(struct sg_mapping_iter *miter)
 {
 	if (!miter->__remaining) {
 		struct scatterlist *sg;
-		unsigned long pgoffset;
 
 		if (!__sg_page_iter_next(&miter->piter))
 			return false;
 
 		sg = miter->piter.sg;
-		pgoffset = miter->piter.sg_pgoffset;
 
-		miter->__offset = pgoffset ? 0 : sg->offset;
+		miter->__offset = miter->piter.sg_pgoffset ? 0 : sg->offset;
+		miter->piter.sg_pgoffset += miter->__offset >> PAGE_SHIFT;
+		miter->__offset &= PAGE_SIZE - 1;
 		miter->__remaining = sg->offset + sg->length -
-				(pgoffset << PAGE_SHIFT) - miter->__offset;
+				     (miter->piter.sg_pgoffset << PAGE_SHIFT) -
+				     miter->__offset;
 		miter->__remaining = min_t(unsigned long, miter->__remaining,
 					   PAGE_SIZE - miter->__offset);
 	}
