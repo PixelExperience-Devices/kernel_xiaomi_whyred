@@ -3019,12 +3019,6 @@ static void __msm_isp_stop_axi_streams(struct vfe_device *vfe_dev,
 		msm_isp_cfg_stream_scratch(stream_info, VFE_PONG_FLAG);
 		stream_info->undelivered_request_cnt = 0;
 		vfe_dev->irq_sof_id = 0;
-		if (stream_info->controllable_output &&
-			stream_info->pending_buf_info.is_buf_done_pending) {
-			msm_isp_free_pending_buffer(vfe_dev, stream_info,
-				&timestamp);
-			stream_info->pending_buf_info.is_buf_done_pending = 0;
-		}
 		for (k = 0; k < stream_info->num_isp; k++) {
 			vfe_dev = stream_info->vfe_dev[k];
 			if (stream_info->num_planes > 1)
