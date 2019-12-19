@@ -1,5 +1,4 @@
-/* Copyright (c) 2017 The Linux Foundation. All rights reserved.
- * Copyright (C) 2019 XiaoMi, Inc.
+/* Copyright (c) 2017,2019 The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -110,7 +109,7 @@ enum {
 #if defined(CONFIG_KERNEL_CUSTOM_E7S)
 #define ONLY_PM660_CURRENT_UA 2000000
 #endif
- 
+
 /*******
  * ICL *
 ********/
@@ -205,7 +204,7 @@ static void split_settled(struct pl_data *chip)
 			pr_err("pl_disable_votable effective main_psy current_ua =%d \n", pval.intval);
 			if (get_effective_result_locked(chip->pl_disable_votable) && (pval.intval > ONLY_PM660_CURRENT_UA)){
 				pr_err("pl_disable_votable effective main_psy force current_ua =%d to %d \n", pval.intval, ONLY_PM660_CURRENT_UA);
-			pval.intval = ONLY_PM660_CURRENT_UA;	
+			pval.intval = ONLY_PM660_CURRENT_UA;
 			}
 		}
 		#endif
@@ -1238,7 +1237,7 @@ static void handle_settled_icl_change(struct pl_data *chip)
 		if ((main_limited && (main_settled_ua + chip->pl_settled_ua) < 1300000)
 				|| (main_settled_ua == 0)
 				|| ((total_current_ua >= 0) &&
-					(total_current_ua <= 1300000))){ 
+					(total_current_ua <= 1300000))){
 			pr_err("total_current_ua <= 1300000 disable parallel charger smb1351 \n");
 			vote(chip->pl_enable_votable_indirect, USBIN_I_VOTER, false, 0);
 			vote(chip->pl_disable_votable, PL_TEMP_VOTER, true, 0);
@@ -1422,6 +1421,12 @@ int qcom_batt_init(void)
 	if (!chip->pl_ws)
 		goto cleanup;
 
+	INIT_DELAYED_WORK(&chip->status_change_work, status_change_work);
+	INIT_DELAYED_WORK(&chip->pl_taper_work, pl_taper_work);
+	INIT_WORK(&chip->pl_disable_forever_work, pl_disable_forever_work);
+	INIT_DELAYED_WORK(&chip->pl_awake_work, pl_awake_work);
+	INIT_DELAYED_WORK(&chip->fcc_step_update_work, fcc_step_update_work);
+
 	chip->fcc_votable = create_votable("FCC", VOTE_MIN,
 					pl_fcc_vote_callback,
 					chip);
@@ -1475,12 +1480,6 @@ int qcom_batt_init(void)
 	}
 
 	vote(chip->pl_disable_votable, PL_INDIRECT_VOTER, true, 0);
-
-	INIT_DELAYED_WORK(&chip->status_change_work, status_change_work);
-	INIT_DELAYED_WORK(&chip->pl_taper_work, pl_taper_work);
-	INIT_WORK(&chip->pl_disable_forever_work, pl_disable_forever_work);
-	INIT_DELAYED_WORK(&chip->pl_awake_work, pl_awake_work);
-	INIT_DELAYED_WORK(&chip->fcc_step_update_work, fcc_step_update_work);
 
 	rc = pl_register_notifier(chip);
 	if (rc < 0) {
