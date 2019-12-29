@@ -664,7 +664,7 @@ static int fg_get_battery_temp(struct fg_chip *chip, int *val)
 	temp = (temp - 273) * 10;
 		pr_err("LCT TEMP=%d\n",temp);
 
-#if defined(CONFIG_KERNEL_CUSTOM_E7T)	
+#if defined(CONFIG_KERNEL_CUSTOM_E7T)
 	if (temp < -40){
 		switch (temp){
 		case -50:
@@ -2753,7 +2753,7 @@ static void clear_cycle_counter(struct fg_chip *chip)
 	}
 	rc = fg_sram_write(chip, CYCLE_COUNT_WORD, CYCLE_COUNT_OFFSET,
 			(u8 *)&chip->cyc_ctr.count,
-			sizeof(chip->cyc_ctr.count) / sizeof(u8 *),
+			sizeof(chip->cyc_ctr.count) / sizeof(u16),
 			FG_IMA_DEFAULT);
 	if (rc < 0)
 		pr_err("failed to clear cycle counter rc=%d\n", rc);

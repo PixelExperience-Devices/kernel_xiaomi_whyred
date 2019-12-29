@@ -135,7 +135,7 @@ int synaptics_gesture_switch(struct input_dev *dev, unsigned int type, unsigned 
 
 	unsigned int input ;
 	if (type == EV_SYN && code == SYN_CONFIG)
-	{ 
+	{
 		if (rmi4_data->suspend)
 		{
 			if ((value != WAKEUP_OFF) || synaptics_gesture_func_on)
@@ -2542,7 +2542,7 @@ static int synaptics_rmi4_f12_init(struct synaptics_rmi4_data *rmi4_data,
 			ctrl_23_size++;
 		else if (retval < 0)
 			goto exit;
-		 
+
 	}
 
 	retval = synaptics_rmi4_f12_find_sub(rmi4_data,
@@ -3164,7 +3164,7 @@ rescan_pdt:
 					fhandler = NULL;
 					return retval;
 				}
-				
+
 				retval = synaptics_rmi4_check_status(rmi4_data,
 						&was_in_bl_mode);
 				if (retval < 0) {
@@ -3407,7 +3407,7 @@ static int synaptics_rmi4_gpio_setup(int gpio, bool config, int dir, int state)
 	unsigned char buf[16];
 
 	if (config) {
-		snprintf(buf, PAGE_SIZE, "dsx_gpio_%u\n", gpio);
+		snprintf(buf, sizeof(buf), "dsx_gpio_%u\n", gpio);
 
 		retval = gpio_request(gpio, buf);
 		if (retval) {

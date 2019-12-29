@@ -865,7 +865,7 @@ static int ctp_lockdown_proc_open (struct inode* inode, struct file* file)
 	return single_open(file, ctp_lockdown_proc_show, inode->i_private);
 }
 
-static const struct file_operations ctp_lockdown_proc_fops = 
+static const struct file_operations ctp_lockdown_proc_fops =
 {
 	.open = ctp_lockdown_proc_open,
 	.read = seq_read,
@@ -5699,7 +5699,7 @@ static ssize_t fwu_sysfs_read_lockdown_code_show(struct device *dev,
 	}
 
 	for (i = 0; i < lockdown_data_size; i++) {
-		retval += snprintf(ld_val, PAGE_SIZE, "%02x",
+		retval += snprintf(ld_val, sizeof(ld_val), "%02x",
 				*(lockdown_data + i));
 		strlcat(buf, ld_val, lockdown_data_size);
 	}
