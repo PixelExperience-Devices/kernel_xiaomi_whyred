@@ -1053,7 +1053,7 @@ static int qpnp_hap_parse_buffer_dt(struct qpnp_hap *hap)
 	} else {
 		memcpy(hap->wave_samp, prop->value, QPNP_HAP_WAV_SAMP_LEN);
 	}
-	
+
 		prop = of_find_property(pdev->dev.of_node,
 			"qcom,wave-samples-two", &temp);
 	if (!prop || temp != QPNP_HAP_WAV_SAMP_LEN) {
@@ -1063,7 +1063,7 @@ static int qpnp_hap_parse_buffer_dt(struct qpnp_hap *hap)
 	} else {
 		memcpy(hap->wave_samp_two, prop->value, QPNP_HAP_WAV_SAMP_LEN);
 	}
-	
+
 		prop = of_find_property(pdev->dev.of_node,
 			"qcom,wave-samples-three", &temp);
 	if (!prop || temp != QPNP_HAP_WAV_SAMP_LEN) {
@@ -1073,7 +1073,7 @@ static int qpnp_hap_parse_buffer_dt(struct qpnp_hap *hap)
 	} else {
 		memcpy(hap->wave_samp_three, prop->value, QPNP_HAP_WAV_SAMP_LEN);
 	}
-	
+
 
 	return 0;
 }
@@ -2477,9 +2477,9 @@ int qpnp_hap_play_byte(u8 data, bool on)
 	pr_debug("data=0x%x duty_per=%d\n", data, duty_percent);
 
 	rc = qpnp_hap_set(hap, true);
-pr_info("%s  zjl f   asd  7 \n", __func__);    
+pr_info("%s  zjl f   asd  7 \n", __func__);
 	return rc;
-}    
+}
 EXPORT_SYMBOL(qpnp_hap_play_byte);
 
 /* worker to opeate haptics */
@@ -3120,11 +3120,11 @@ static int qpnp_haptic_probe(struct platform_device *pdev)
 	hap = devm_kzalloc(&pdev->dev, sizeof(*hap), GFP_KERNEL);
 	if (!hap)
 		return -ENOMEM;
-		hap->regmap = dev_get_regmap(pdev->dev.parent, NULL);
-		if (!hap->regmap) {
-			pr_err("Couldn't get parent's regmap\n");
-			return -EINVAL;
-		}
+	hap->regmap = dev_get_regmap(pdev->dev.parent, NULL);
+	if (!hap->regmap) {
+		pr_err("Couldn't get parent's regmap\n");
+		return -EINVAL;
+	}
 
 	hap->pdev = pdev;
 
