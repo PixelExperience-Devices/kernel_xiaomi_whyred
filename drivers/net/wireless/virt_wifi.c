@@ -526,10 +526,8 @@ static int virt_wifi_newlink(struct net *src_net, struct net_device *dev,
 	SET_NETDEV_DEV(dev, &priv->lowerdev->dev);
 	dev->ieee80211_ptr = kzalloc(sizeof(*dev->ieee80211_ptr), GFP_KERNEL);
 
-	if (!dev->ieee80211_ptr) {
-		err = -ENOMEM;
+	if (!dev->ieee80211_ptr)
 		goto remove_handler;
-	}
 
 	dev->ieee80211_ptr->iftype = NL80211_IFTYPE_STATION;
 	dev->ieee80211_ptr->wiphy = common_wiphy;
